@@ -1,11 +1,17 @@
 ## load library(ies)
 library(stringr)
+library(RCurl)  ## this is only needed if pulling in the sample data via URL
 
 ## set directory
 setwd("C:/Users/pawlusm/Desktop")
 
-## read file
-gfs <- read.csv("2015 December GradFest.csv", stringsAsFactors = FALSE)
+#  ## read file  (if you are using your own data -- just change the file name)
+#  ## if you want to use this script with no edits then give your free text header the column name: fs_comm
+#  gfs <- read.csv("2015 December GradFest.csv", stringsAsFactors = FALSE)
+
+## read in the sample data
+x <- getURL("https://raw.githubusercontent.com/michaelpawlus/fundraising_analytics/master/name_extraction_from_free_text/sample_survey.csv")
+gfs <- read.csv(text = x)
 
 ## regex to extract two adjacent words that both start with a capital letter
 names <- "((\\b[A-Z]\\w{2,100}\\s)(\\b[A-Z]\\w{2,100}\\b))"
