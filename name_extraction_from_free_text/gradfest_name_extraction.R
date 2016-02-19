@@ -11,7 +11,7 @@ setwd("C:/Users/pawlusm/Desktop")
 
 ## read in the sample data
 x <- getURL("https://raw.githubusercontent.com/michaelpawlus/fundraising_analytics/master/name_extraction_from_free_text/sample_survey.csv")
-gfs <- read.csv(text = x)
+gfs <- read.csv(text = x, stringsAsFactors = FALSE)
 
 ## regex to extract two adjacent words that both start with a capital letter
 names <- "((\\b[A-Z]\\w{2,100}\\s)(\\b[A-Z]\\w{2,100}\\b))"
