@@ -6,12 +6,13 @@ library(data.table)
 library(plyr)
 
 ## set working directory
+# setwd("C:/Users/pawlusm/Desktop/decTree/fundraising_analytics/portfolio_management_analytics")
 setwd("C:/Users/pawlusm/Desktop")
 
 ## read in the file
 act2 <- read.csv("action_eval3.csv", stringsAsFactors = FALSE)
-
-
+x <- "Smith"
+act2 <- act2[act2$goLast==x,]
 
 #### if you want to use this exact script with no edits then you will need the following colum headers:
 
@@ -50,8 +51,8 @@ act2<- within(act2, re_grp <- reorder(re_grp, as.numeric(as.character(re_grp))))
 
 ## plot results (faceted bar plot)
 ggplot(data=act2) +
-  geom_bar(mapping=aes(x=re_grp, fill=goLast), binwidth=1) + 
-  facet_grid(goLast~.) +
+  geom_bar(mapping=aes(x=re_grp, fill=category), binwidth=1) + 
+  #facet_grid(goLast~.) +
   theme_bw() + 
   scale_color_brewer() +
   labs(title="Actions by RE")
@@ -82,19 +83,37 @@ ggplot(data=act2) +
   labs(title="Actions by Total Giving")
 
 
-#### histogram by affinity without buckets  
-## (may add a 2-pass bucketing in a future iteration -- only for those greater than 10)
+#### make cuts to put affinity values into buckets
 
 
-act2$AffTtl <- as.factor(as.character(act2$AffTtl ))
-act2<- within(act2, AffTtl <- reorder(AffTtl, as.numeric(as.character(AffTtl))))
+## check the range of values
+range(act2$AffTtl, na.rm = TRUE)  
+
+## put affinity into buckets by 1 (on second thought this is not really needed)
+act2$at_grp <- cut(act2$AffTtl, breaks = seq(0, 10, by = 1), label=FALSE)
+
+## remove outliers since it's not really a missing value but people we haven't coded
+## outliers above 10 are still coded with an 11
+act2 <- act2[ which(act2$AffTtl>0),]  ## note this subset (we will need to reload the data set after -- there are better ways to do this)
+act2$at_grp[is.na(act2$at_grp)]   <- 11
+
+## convert rating to factor and then reorder factor levels
+act2$at_grp <- as.factor(as.character(act2$at_grp))
+act2<- within(act2, at_grp <- reorder(at_grp, as.numeric(as.character(at_grp))))
 
 ## plot results
-ggplot(data=act2[ which(act2$AffTtl!=0),]) +
-  geom_bar(mapping=aes(x=AffTtl, fill=goLast), binwidth=1) + 
+ggplot(data=act2) +
+  geom_bar(mapping=aes(x=at_grp, fill=goLast), binwidth=1) + 
   facet_grid(goLast~.) +
   theme_bw() + scale_color_brewer() +
   labs(title="Actions by Affinity")
+
+
+#### re-read the data back in again to recapture rows that you cut during the affinity plot creation
+
+#### there is a better way to do this and this will be corrected in a future interation
+
+act2 <- read.csv("action_eval3.csv", stringsAsFactors = FALSE)
 
 
 
@@ -182,7 +201,7 @@ wordcloud(actCorpus,
           min.freq = 5,
           random.order = FALSE,
           colors = brewer.pal(9, 'Blues')[4:9]
-          )
+)
 
 
 #### individual word cloud  (for all gift officers seperately)
@@ -299,27 +318,27 @@ td_all <- td_new
 
 ## for loop to cycle through each gift officer
 for (i in 2:max(as.numeric(f))){
-
-## the first portion of this is the same as above
-ocomm <- act2$conc[act2$goLast==f[i]]
-d<-get_nrc_sentiment(ocomm)
-td<-data.frame(t(d))
-
-td_new <- data.frame(rowSums(td[2:ncol(td)]))
-
-names(td_new)[1] <- "count"
-td_new <- cbind("sentiment" = rownames(td_new), td_new)
-rownames(td_new) <- NULL
-td_new$goLast <- f[i]
-
-q <- as.numeric(td_new[[2]][1:8])/sum(as.numeric(td_new[[2]][1:8]))
-w <- as.numeric(td_new[[2]][9:10])/sum(as.numeric(td_new[[2]][9:10]))
-e <- append(q,w)
-
-td_new$percent <- e
-
-## in this step we row bind each new td_new data from for each gift officer to td_all which has data for all gift officers
-td_all <- rbind(td_new,td_all)
+  
+  ## the first portion of this is the same as above
+  ocomm <- act2$conc[act2$goLast==f[i]]
+  d<-get_nrc_sentiment(ocomm)
+  td<-data.frame(t(d))
+  
+  td_new <- data.frame(rowSums(td[2:ncol(td)]))
+  
+  names(td_new)[1] <- "count"
+  td_new <- cbind("sentiment" = rownames(td_new), td_new)
+  rownames(td_new) <- NULL
+  td_new$goLast <- f[i]
+  
+  q <- as.numeric(td_new[[2]][1:8])/sum(as.numeric(td_new[[2]][1:8]))
+  w <- as.numeric(td_new[[2]][9:10])/sum(as.numeric(td_new[[2]][9:10]))
+  e <- append(q,w)
+  
+  td_new$percent <- e
+  
+  ## in this step we row bind each new td_new data from for each gift officer to td_all which has data for all gift officers
+  td_all <- rbind(td_new,td_all)
 }
 
 ## create a vector of numbers to subset the emotional rows
