@@ -5,6 +5,10 @@ library(RColorBrewer)
 library(data.table)
 library(plyr)
 
+
+#### for this individual report x-axis values either need to remain numeric or use a different plot style
+
+
 ## set working directory
 # setwd("C:/Users/pawlusm/Desktop/decTree/fundraising_analytics/portfolio_management_analytics")
 setwd("C:/Users/pawlusm/Desktop")
@@ -50,13 +54,12 @@ act2$re_grp <- as.factor(as.character(act2$re_grp))
 act2<- within(act2, re_grp <- reorder(re_grp, as.numeric(as.character(re_grp))))
 
 ## plot results (faceted bar plot)
-ggplot(data=act2) +
-  geom_bar(mapping=aes(x=re_grp, fill=category), binwidth=1) + 
-  #facet_grid(goLast~.) +
+ggplot(act2, aes(x=as.numeric(as.character(re_grp)), fill="#FF6666")) + 
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=median(as.numeric(as.character(re_grp)), na.rm=T)),   # Ignore NA values for mean
+           color="red", linetype="dashed", size=1) +
   theme_bw() + 
-  scale_color_brewer() +
   labs(title="Actions by RE")
-
 
 #### make cuts to put total giving values into buckets
 
@@ -76,45 +79,28 @@ act2$tg_grp <- as.factor(as.character(act2$tg_grp))
 act2<- within(act2, tg_grp <- reorder(tg_grp, as.numeric(as.character(tg_grp))))
 
 ## plot results
-ggplot(data=act2) +
-  geom_bar(mapping=aes(x=tg_grp, fill=goLast), binwidth=1) + 
-  facet_grid(goLast~.) +
-  theme_bw() + scale_color_brewer() +
-  labs(title="Actions by Total Giving")
+ggplot(act2, aes(x=as.numeric(as.character(tg_grp)), fill="#FF6666")) + 
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=median(as.numeric(as.character(tg_grp)), na.rm=T)),   # Ignore NA values for mean
+             color="red", linetype="dashed", size=1) +
+  theme_bw() + 
+  labs(title="Actions by TG")
 
 
-#### make cuts to put affinity values into buckets
+#### histogram by affinity without buckets  
+## (may add a 2-pass bucketing in a future iteration -- only for those greater than 10)
 
 
-## check the range of values
-range(act2$AffTtl, na.rm = TRUE)  
-
-## put affinity into buckets by 1 (on second thought this is not really needed)
-act2$at_grp <- cut(act2$AffTtl, breaks = seq(0, 10, by = 1), label=FALSE)
-
-## remove outliers since it's not really a missing value but people we haven't coded
-## outliers above 10 are still coded with an 11
-act2 <- act2[ which(act2$AffTtl>0),]  ## note this subset (we will need to reload the data set after -- there are better ways to do this)
-act2$at_grp[is.na(act2$at_grp)]   <- 11
-
-## convert rating to factor and then reorder factor levels
-act2$at_grp <- as.factor(as.character(act2$at_grp))
-act2<- within(act2, at_grp <- reorder(at_grp, as.numeric(as.character(at_grp))))
+act2$AffTtl <- as.factor(as.character(act2$AffTtl ))
+act2<- within(act2, AffTtl <- reorder(AffTtl, as.numeric(as.character(AffTtl))))
 
 ## plot results
-ggplot(data=act2) +
-  geom_bar(mapping=aes(x=at_grp, fill=goLast), binwidth=1) + 
-  facet_grid(goLast~.) +
-  theme_bw() + scale_color_brewer() +
+ggplot(act2[ which(act2$AffTtl!=0),], aes(x=as.numeric(as.character(AffTtl)), fill="#FF6666")) + 
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=median(as.numeric(as.character(AffTtl)), na.rm=T)),   # Ignore NA values for mean
+             color="red", linetype="dashed", size=1) +
+  theme_bw() + 
   labs(title="Actions by Affinity")
-
-
-#### re-read the data back in again to recapture rows that you cut during the affinity plot creation
-
-#### there is a better way to do this and this will be corrected in a future interation
-
-act2 <- read.csv("action_eval3.csv", stringsAsFactors = FALSE)
-
 
 
 #### get the mean word count
@@ -130,29 +116,27 @@ act2$conc <- rep("x",nrow(act2))
 
 ## concatenate description and comment fields which are the two text fields in Millennium that are used
 for (i in 1:nrow(act2)) {
-  act2[i,28] <- paste(act2[i,22], act2[i,26], sep = " ")  # change columns conc gets two text fields
+  act2[i,30] <- paste(act2[i,22], act2[i,26], sep = " ")  # change columns conc gets two text fields
 }
 
 ## word count for each
 ## this goes row by row and splits the text field by spaces (" ") seperating each word
 ## it then counts the number of individual words
 for (i in 1:nrow(act2)) {
-  y <- act2[i,28]
+  y <- act2[i,30]
   z <- strsplit(y, " ")
-  act2[i,27] <- length(z[[1]])  
+  act2[i,29] <- length(z[[1]])  
 }
 
 ## this creates a data frame of mean values based on the word counts for each gift officer
 mm <- ddply(act2, "goLast", summarise, mwrds = mean(wrdc))
 
-## bar plot of average word count
-ggplot(mm, aes(x = goLast, y = mwrds)) + 
-  geom_bar(stat = "identity") + 
-  theme(axis.text.x=element_text(angle=45,hjust=1,vjust=1))
+mm$mwrds
 
 
 #### plot giving by category
 
+#### make side by side bars  ####
 
 ggplot(act2, aes(goLast, fill=category)) + 
   geom_bar() +
@@ -161,6 +145,7 @@ ggplot(act2, aes(goLast, fill=category)) +
 
 #### plot giving by mode
 
+#### make side by side bars  ####
 
 qplot(factor(goLast), data=act2, geom="bar", fill=factor(mode)) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1,vjust=1))
@@ -203,46 +188,6 @@ wordcloud(actCorpus,
           colors = brewer.pal(9, 'Blues')[4:9]
 )
 
-
-#### individual word cloud  (for all gift officers seperately)
-
-
-
-## create a factor list for each gift officer last name
-f <- as.factor(unique(act2$goLast))
-
-## for each name in the factor list create a word cloud
-for (i in 1:max(as.numeric(f))){
-  actCorpus <- Corpus(VectorSource(act2$conc[act2$goLast==f[i]]))
-  
-  actCorpus <- tm_map(actCorpus, PlainTextDocument)
-  
-  actCorpus <- tm_map(actCorpus, removePunctuation)
-  actCorpus <- tm_map(actCorpus, removeWords, stopwords('english'))
-  
-  actCorpus <- tm_map(actCorpus, stemDocument)
-  
-  ## this formats the image frame so the gift officer name is on top and word cloud below
-  layout(matrix(c(1, 2), nrow=2), heights=c(1, 4))
-  par(mar=rep(0, 4))
-  plot.new()
-  
-  ## this sets a text element to the gift officer last name
-  text(x=0.5, y=0.5, f[i])
-  
-  ## create a word cloud including a title which will list the gift officers name
-  ## this creates a seperate image for each gift officer
-  wordcloud(actCorpus,
-            scale = c(3,.1),
-            max.words = 25, 
-            min.freq = 5,
-            random.order = FALSE,
-            colors = brewer.pal(9, 'Blues')[4:9],
-            main = "Title"
-  )
-}
-
-
 #### sentiment analysis
 
 ## load library
@@ -282,91 +227,6 @@ qplot(sentiment, data=td_new2, weight=count, geom="histogram",fill=sentiment)+gg
 #plot +/- sentiment
 qplot(sentiment, data=td_new3, weight=count, geom="histogram",fill=sentiment)+ggtitle("Postive/Negative Sentiment")
 
-
-
-#### split emotion chart by gift officer
-
-
-#f <- as.factor(unique(act2$goLast))  # this is only need if you didn't already do it above
-
-## follow the steps as above for the first gift officer in the factor list shown subseted like: [act2$goLast==f[1]]
-ocomm <- act2$conc[act2$goLast==f[1]]
-d<-get_nrc_sentiment(ocomm)
-td<-data.frame(t(d))
-
-td_new <- data.frame(rowSums(td[2:ncol(td)]))
-
-names(td_new)[1] <- "count"
-td_new <- cbind("sentiment" = rownames(td_new), td_new)
-rownames(td_new) <- NULL
-
-## make a new column with the gift officer's name
-td_new$goLast <- f[1]
-
-## get percentage/proporation of visits that fall into each emotional category
-q <- as.numeric(td_new[[2]][1:8])/sum(as.numeric(td_new[[2]][1:8]))
-## get percentage/proporation of visits that fall into each +/- category
-w <- as.numeric(td_new[[2]][9:10])/sum(as.numeric(td_new[[2]][9:10]))
-## put vector q and vector w together in a combined vector e
-e <- append(q,w)
-
-## add the column containing percentage to the td_new data frame
-td_new$percent <- e
-
-## copy td_new to td_all so that you can iterate over td_new for each gift officer and add it to td_all
-td_all <- td_new
-
-## for loop to cycle through each gift officer
-for (i in 2:max(as.numeric(f))){
-  
-  ## the first portion of this is the same as above
-  ocomm <- act2$conc[act2$goLast==f[i]]
-  d<-get_nrc_sentiment(ocomm)
-  td<-data.frame(t(d))
-  
-  td_new <- data.frame(rowSums(td[2:ncol(td)]))
-  
-  names(td_new)[1] <- "count"
-  td_new <- cbind("sentiment" = rownames(td_new), td_new)
-  rownames(td_new) <- NULL
-  td_new$goLast <- f[i]
-  
-  q <- as.numeric(td_new[[2]][1:8])/sum(as.numeric(td_new[[2]][1:8]))
-  w <- as.numeric(td_new[[2]][9:10])/sum(as.numeric(td_new[[2]][9:10]))
-  e <- append(q,w)
-  
-  td_new$percent <- e
-  
-  ## in this step we row bind each new td_new data from for each gift officer to td_all which has data for all gift officers
-  td_all <- rbind(td_new,td_all)
-}
-
-## create a vector of numbers to subset the emotional rows
-a <- 10 - 2:9
-
-for (i in 2:max(as.numeric(f))){
-  b <- (i*10) - 2:9
-  a <- append(a,b)
-}
-
-## create a vector of numbers to subset the +/- rows
-k <- 10 - 0:1
-
-for (i in 2:max(as.numeric(f))){
-  l <- (i*10) - 0:1
-  k <- append(l,k)
-}
-
-## plot emotion chart (using 'a' from above which has the row index number for emotions)
-qplot(sentiment, data=td_all[a,], weight=percent, geom="histogram",fill=sentiment)+ 
-  facet_grid(goLast~.)+
-  ggtitle("Emotional Sentiment")
-## plot +/- chart (using 'k' from above which has the row index number for +/-)
-qplot(sentiment, data=td_all[k,], weight=percent, geom="histogram",fill=sentiment)+
-  facet_grid(goLast~.)+
-  ggtitle("Postive/Negative Sentiment")
-
-
 ## if you notice any unusual trends you can check comments for any person using the snippet below
 
-# act2$conc[act2$goLast=="(name)"]
+# act2$conc
