@@ -26,14 +26,17 @@ mapdata <- within(mapdata, capacity <- reorder(capacity, as.numeric(as.character
 # a score of 6 is possible here because the current fiscal year is also included
 mapdata$rf <- rowSums(mapdata[,6:11])
 
-# get a map of using the Google API 
-# (Change location to wherever you want the map to be and adjust zoom from 10 - 14 to get the size you want)
-# (check this link for more easy options: https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/ggmap/ggmapCheatsheet.pdf)
-egr.map.code <- get_map(location = "East Grand Rapids, MI", source = 'google', maptype = 'roadmap', zoom = 13)
-
 # obtain long/lat for all addresses in the area and then add the new columns to mapdata
 mapdata.ll <- geocode(mapdata$addr, source = "google")
 mapdata <- cbind(mapdata, mapdata.ll)
+
+# Get a bounding box that will contain all the geocoded points, plus some wiggle room
+# (Adjust f to change wiggle room)
+bbox <- ggmap::make_bbox(lon, lat, mapdata, f=0.5)
+
+# get a map of the bounded area using the Google API 
+# (check this link for more easy options: https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/ggmap/ggmapCheatsheet.pdf)
+egr.map.code <- get_map(location = bbox, source = 'google', maptype = 'roadmap')
 
 # plot points on a map
 # you have three visual elements that you can set to variables: shape, size and color
