@@ -13,7 +13,7 @@ mapdata <- read_csv("map_data.csv")
 
 ## or read in the sample data from GitHub
 x <- getURL("https://raw.githubusercontent.com/michaelpawlus/fundraising_analytics/master/mapping/map_data.csv")
-mapdata <- read_csv(text = x)
+mapdata <- read_csv(x)
 
 # change binary attribute from numeric to factor variable
 mapdata$mg_donor <- as.factor(mapdata$mg_donor)   
