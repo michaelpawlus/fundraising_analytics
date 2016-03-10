@@ -4,4 +4,4 @@
 
 This is the RFM script that is the basis for the chapter in the R Book on RFM scoring.
 
-A sample dat aset is included for practicing
+A sample data set is included for practicing
