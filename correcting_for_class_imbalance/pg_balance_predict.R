@@ -11,8 +11,8 @@ library(RCurl)
 pg <- fread("pg_prospects.csv")
 
 ## or read in the sample data from GitHub
-x <- getURL("https://github.com/michaelpawlus/fundraising_analytics/blob/master/correcting_for_class_imbalance/pg_prospects.csv")
-mapdata <- read_csv(x)
+x <- getURL("https://raw.githubusercontent.com/michaelpawlus/fundraising_analytics/master/correcting_for_class_imbalance/pg_prospects.csv")
+pg <- fread(x)
 
 ## convert characters to integers
 pg <- pg[, cae:=as.integer(as.factor(cae))]
