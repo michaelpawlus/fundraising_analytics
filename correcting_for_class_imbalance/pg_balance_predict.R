@@ -5,8 +5,14 @@ library(data.table)
 #library(dplyr)
 #library(reshape2)
 library(bit64)
+library(RCurl)
 
+## read in the data
 pg <- fread("pg_prospects.csv")
+
+## or read in the sample data from GitHub
+x <- getURL("https://github.com/michaelpawlus/fundraising_analytics/blob/master/correcting_for_class_imbalance/pg_prospects.csv")
+mapdata <- read_csv(x)
 
 ## convert characters to integers
 pg <- pg[, cae:=as.integer(as.factor(cae))]
