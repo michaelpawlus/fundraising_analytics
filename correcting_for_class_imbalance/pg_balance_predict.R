@@ -2,10 +2,11 @@ setwd("C:/Users/pawlusm/Desktop")
 
 library(readr)
 library(data.table)
-#library(dplyr)
-#library(reshape2)
+library(dplyr)
+library(reshape2)
 library(bit64)
 library(RCurl)
+library(ggplot2)
 
 ## read in the data
 pg <- fread("pg_prospects.csv")
@@ -123,6 +124,16 @@ for (i in 1:80) {
   
   
 }
+
+## check the distribution of predictions
+ggplot(pg.all.prospects, aes(x=pred)) + 
+  geom_histogram(aes(y = ..density..), color="black", fill="light blue", binwidth = 0.1) +
+  geom_density(color="blue", fill = "gold", alpha = 0.25) +
+  scale_x_continuous(breaks = round(seq(min(pg.all.prospects$pred), max(pg.all.prospects$pred), by = 0.1),1)) +
+  theme_bw()
+
+## how many quality prospects
+length(pg.all.prospects[pred > 0.95,coreid])
 
 ## write the final prediction file
 write_csv(pg.all.prospects, "pg_prospects1.csv")

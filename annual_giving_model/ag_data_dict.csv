@@ -1,0 +1,32 @@
+column_name,meaning
+coreid,unique ID
+gift_count,count of gifts
+fys,number of fiscal years where a gift was made
+first_fy,fiscal year when the first gift was made
+last_fy,fiscal year when the last gift was made
+act_yrs,last_fy - first_fy   the number of years between first gift and last gift
+unrestricted_count,count of gifts to unrestricted
+unrestricted_percent,percent of giving to unrestricted
+honmem_count,count of gifts to honor/memorial
+honmem_percent,percent of giving to honor/memorial
+event_count,count of events
+vol_count,count of times volunteering
+group_count,count of student group memberships
+grad_yr,graduation year
+cons_giv_yrs,consecutive giving years
+degree,degree (coded numerically using factor levels)
+major,major (coded numerically using factor levels)
+dept,dept/school (coded numerically using factor levels)
+birth_year,birth year
+birth_month,birth month
+birth_day,birth day
+post_direction,direction after an address line (coded numerically using factor levels)
+pre_direction,direction before an address line (coded numerically using factor levels)
+street_number,numbers from an address line
+street_type,"type or brand of street (street, road, avenue, boulevard, etc.)  (coded numerically using factor levels)"
+sub_addr,"additional addr line info after the comma like apt, suite, unit, etc.  (coded numerically using factor levels)"
+addr_flag1-3,flags in the address table (I actually don't know what they mean just wanted to check them out)
+addr_code1-5,parts of the address barcode (some portions coded numerically using factor levels)
+median_income,ZIP code level median income
+annual_two,total fiscal year giving for two fiscal years ago
+target,binary indicator: was a gift made last fiscal year

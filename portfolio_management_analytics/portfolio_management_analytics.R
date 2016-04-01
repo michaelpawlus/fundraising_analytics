@@ -3,28 +3,23 @@
 library(ggplot2)
 library(RColorBrewer)
 library(data.table)
-library(plyr)
+library(dplyr)
+library(readr)
+library(stringr)
 
 ## set working directory
 setwd("C:/Users/pawlusm/Desktop")
 
 ## read in the file
-act2 <- read.csv("action_eval3.csv", stringsAsFactors = FALSE)
+act2 <- read_csv("action_eval_mar16.csv")   ## create csv using KL-action reports.sql (##act2)
 
 
 
-#### if you want to use this exact script with no edits then you will need the following colum headers:
+#### if you want to use this exact script with no edits then you will need the following column headers:
 
-#[1] "coreid"        "FullName"      "LastName"      "GradYr"        "const"         "cae"           "parent"       
-#[8] "median_income" "RE_Val"        "JobName"       "JobTitle"      "AffTtl"        "Pledge_Blc"    "LubYrs"       
-#[15] "FY16"          "FY15"          "FY14"          "Total_Giving"  "low_rating"    "high_rating"   "goLast"       
-#[22] "actDesc"       "actDate"       "category"      "mode"          "actText"
+#[1] "coreid"       "RE_Val"       "AffTtl"       "Total_Giving" "goLast"       "actDesc"     
+#[7] "actDate"      "category"     "mode"         "actText"     
 
-#### I think these are mostly self-explanatory (I'll add more deatil in a Markdown file later)
-
-#### If there is high demand, I can actually trim this down.  There are columns that I don't use
-
-#### I will also see about getting together a sample dataset that doesn't have any personal details
 
 
 
@@ -32,6 +27,7 @@ act2 <- read.csv("action_eval3.csv", stringsAsFactors = FALSE)
 
 
 ## check the range of values
+act2$RE_Val <- as.integer(act2$RE_Val)
 range(act2$RE_Val, na.rm = TRUE)
 
 ## convert all missing values to zero
@@ -53,7 +49,6 @@ ggplot(data=act2) +
   geom_bar(mapping=aes(x=re_grp, fill=goLast), binwidth=1) + 
   facet_grid(goLast~.) +
   theme_bw() + 
-  scale_color_brewer() +
   labs(title="Actions by RE")
 
 
@@ -78,7 +73,7 @@ act2<- within(act2, tg_grp <- reorder(tg_grp, as.numeric(as.character(tg_grp))))
 ggplot(data=act2) +
   geom_bar(mapping=aes(x=tg_grp, fill=goLast), binwidth=1) + 
   facet_grid(goLast~.) +
-  theme_bw() + scale_color_brewer() +
+  theme_bw() +
   labs(title="Actions by Total Giving")
 
 
@@ -93,7 +88,7 @@ act2<- within(act2, AffTtl <- reorder(AffTtl, as.numeric(as.character(AffTtl))))
 ggplot(data=act2[ which(act2$AffTtl!=0),]) +
   geom_bar(mapping=aes(x=AffTtl, fill=goLast), binwidth=1) + 
   facet_grid(goLast~.) +
-  theme_bw() + scale_color_brewer() +
+  theme_bw() + 
   labs(title="Actions by Affinity")
 
 
@@ -111,20 +106,22 @@ act2$conc <- rep("x",nrow(act2))
 
 ## concatenate description and comment fields which are the two text fields in Millennium that are used
 for (i in 1:nrow(act2)) {
-  act2[i,28] <- paste(act2[i,22], act2[i,26], sep = " ")  # change columns conc gets two text fields
+  act2[i,14] <- paste(act2[i,6], act2[i,10], sep = " ")  # change columns conc gets two text fields
 }
 
 ## word count for each
 ## this goes row by row and splits the text field by spaces (" ") seperating each word
 ## it then counts the number of individual words
 for (i in 1:nrow(act2)) {
-  y <- act2[i,28]
-  z <- strsplit(y, " ")
-  act2[i,27] <- length(z[[1]])  
+  y <- act2[i,14]
+  z <- str_split(y, " ")
+  act2[i,13] <- length(z[[1]])  
 }
 
 ## this creates a data frame of mean values based on the word counts for each gift officer
-mm <- ddply(act2, "goLast", summarise, mwrds = mean(wrdc))
+mm <-  act2 %>% 
+       group_by(goLast) %>% 
+       summarise(mwrds = mean(wrdc, na.rm = TRUE)) 
 
 ## bar plot of average word count
 ggplot(mm, aes(x = goLast, y = mwrds)) + 
@@ -240,7 +237,7 @@ d<-get_nrc_sentiment(ocomm)
 ## transpose the data frame (make columns into rows and rows into columns)
 td<-data.frame(t(d))
 
-## get a numerican sum for each emotion based on the count from each action
+## get a numerical sum for each emotion based on the count from each action
 td_new <- data.frame(rowSums(td[2:ncol(td)]))
 
 ## rename the first column heading for td_new
@@ -350,4 +347,4 @@ qplot(sentiment, data=td_all[k,], weight=percent, geom="histogram",fill=sentimen
 
 ## if you notice any unusual trends you can check comments for any person using the snippet below
 
-# act2$conc[act2$goLast=="(name)"]
+#act2$conc[act2$goLast=="(name)"]
