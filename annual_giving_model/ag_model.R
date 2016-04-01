@@ -7,6 +7,7 @@ library(Matrix)
 library(corrplot)
 library(xgboost)
 library(pROC)
+library(RCurl)
 
 
 ## read in data
@@ -14,7 +15,7 @@ ag <- read_csv("ag_model.csv")
 
 ## or read in remotely
 x <- getURL("https://raw.githubusercontent.com/michaelpawlus/fundraising_analytics/master/annual_giving_model/ag_model.csv")
-pg <- read_csv(x)
+ag <- read_csv(x)
 
 ## randomly sample half of the row indices to split training/test set
 h<-sample(nrow(ag),nrow(ag)*0.5) 
