@@ -11,9 +11,9 @@ library(stringr)
 setwd("C:/Users/pawlusm/Desktop")
 
 ## read in the file
-act2 <- read_csv("action_eval_mar16.csv")   ## create csv using KL-action reports.sql (##act2)
+act2 <- read_csv("june16_actions.csv")   ## create csv using KL-action reports.sql (##act2)
 
-
+month_year <- "june16"
 
 #### if you want to use this exact script with no edits then you will need the following column headers:
 
@@ -27,11 +27,13 @@ act2 <- read_csv("action_eval_mar16.csv")   ## create csv using KL-action report
 
 
 ## check the range of values
-act2$RE_Val <- as.integer(act2$RE_Val)
+
+#act2$RE_Val <- as.integer(act2$RE_Val)  ## not needed right now
 range(act2$RE_Val, na.rm = TRUE)
 
 ## convert all missing values to zero
-act2[is.na(act2)]   <- 0
+
+#act2[is.na(act2)]   <- 0  ## also not needed
 
 ## put real estate values into $100,000 buckets
 act2$re_grp <- cut(act2$RE_Val, breaks = seq(-1, 999999, by = 100000), label=FALSE)
@@ -45,12 +47,16 @@ act2$re_grp <- as.factor(as.character(act2$re_grp))
 act2<- within(act2, re_grp <- reorder(re_grp, as.numeric(as.character(re_grp))))
 
 ## plot results (faceted bar plot)
+
+jpeg(paste0(month_year,"_actions_by_re.jpeg"), width = 10.5, height = 8, units = 'in', res = 300)
+
 ggplot(data=act2) +
-  geom_bar(mapping=aes(x=re_grp, fill=goLast), binwidth=1) + 
+  geom_bar(mapping=aes(x=re_grp, fill=goLast)) + 
   facet_grid(goLast~.) +
   theme_bw() + 
   labs(title="Actions by RE")
 
+dev.off()
 
 #### make cuts to put total giving values into buckets
 
@@ -70,11 +76,16 @@ act2$tg_grp <- as.factor(as.character(act2$tg_grp))
 act2<- within(act2, tg_grp <- reorder(tg_grp, as.numeric(as.character(tg_grp))))
 
 ## plot results
+
+jpeg(paste0(month_year,"_actions_by_giving.jpeg"), width = 10.5, height = 8, units = 'in', res = 300)
+
 ggplot(data=act2) +
-  geom_bar(mapping=aes(x=tg_grp, fill=goLast), binwidth=1) + 
+  geom_bar(mapping=aes(x=tg_grp, fill=goLast)) + 
   facet_grid(goLast~.) +
   theme_bw() +
   labs(title="Actions by Total Giving")
+
+dev.off()
 
 
 #### histogram by affinity without buckets  
@@ -85,13 +96,16 @@ act2$AffTtl <- as.factor(as.character(act2$AffTtl ))
 act2<- within(act2, AffTtl <- reorder(AffTtl, as.numeric(as.character(AffTtl))))
 
 ## plot results
+
+jpeg(paste0(month_year,"_actions_by_affinity.jpeg"), width = 10.5, height = 8, units = 'in', res = 300)
+
 ggplot(data=act2[ which(act2$AffTtl!=0),]) +
-  geom_bar(mapping=aes(x=AffTtl, fill=goLast), binwidth=1) + 
+  geom_bar(mapping=aes(x=AffTtl, fill=goLast)) + 
   facet_grid(goLast~.) +
   theme_bw() + 
   labs(title="Actions by Affinity")
 
-
+dev.off()
 
 #### get the mean word count
 
@@ -106,16 +120,16 @@ act2$conc <- rep("x",nrow(act2))
 
 ## concatenate description and comment fields which are the two text fields in Millennium that are used
 for (i in 1:nrow(act2)) {
-  act2[i,14] <- paste(act2[i,6], act2[i,10], sep = " ")  # change columns conc gets two text fields
+  act2[i,17] <- paste(act2[i,8], act2[i,12], sep = " ")  # change columns conc gets two text fields
 }
 
 ## word count for each
 ## this goes row by row and splits the text field by spaces (" ") seperating each word
 ## it then counts the number of individual words
 for (i in 1:nrow(act2)) {
-  y <- act2[i,14]
+  y <- act2[i,17]
   z <- str_split(y, " ")
-  act2[i,13] <- length(z[[1]])  
+  act2[i,16] <- length(z[[1]])  
 }
 
 ## this creates a data frame of mean values based on the word counts for each gift officer
@@ -124,25 +138,33 @@ mm <-  act2 %>%
        summarise(mwrds = mean(wrdc, na.rm = TRUE)) 
 
 ## bar plot of average word count
+
+jpeg(paste0(month_year,"_word_count_by_gift_officer.jpeg"), width = 10.5, height = 8, units = 'in', res = 300)
+
 ggplot(mm, aes(x = goLast, y = mwrds)) + 
   geom_bar(stat = "identity") + 
   theme(axis.text.x=element_text(angle=45,hjust=1,vjust=1))
 
+dev.off()
 
 #### plot giving by category
 
+jpeg(paste0(month_year,"_cats_by_gift_officer.jpeg"), width = 10.5, height = 8, units = 'in', res = 300)
 
 ggplot(act2, aes(goLast, fill=category)) + 
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1,vjust=1))
 
+dev.off()
 
 #### plot giving by mode
 
+jpeg(paste0(month_year,"_methods_by_gift_officer.jpeg"), width = 10.5, height = 8, units = 'in', res = 300)
 
 qplot(factor(goLast), data=act2, geom="bar", fill=factor(mode)) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1,vjust=1))
 
+dev.off()
 
 #### make a word cloud
 

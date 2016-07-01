@@ -139,5 +139,13 @@ length(pg.all.prospects[pred > 0.95,coreid])
 write_csv(pg.all.prospects, "pg_prospects1.csv")
 
 
+pg.all.prospects[pg.all.prospects$pred > 0.95, ]
+
+qplot(pg.all.prospects$rel_age[pg.all.prospects$pred > 0.95])
+
+qplot(pg$rel_age[pg$gillett == 1])
+
+
+
 
 
