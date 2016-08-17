@@ -11,9 +11,9 @@ library(stringr)
 setwd("C:/Users/pawlusm/Desktop")
 
 ## read in the file
-act2 <- read_csv("june16_actions.csv")   ## create csv using KL-action reports.sql (##act2)
+act2 <- read_csv("actions_eval_july16.csv")   ## create csv using KL-action reports.sql (##act2)
 
-month_year <- "june16"
+month_year <- "july16"
 
 #### if you want to use this exact script with no edits then you will need the following column headers:
 
@@ -189,7 +189,12 @@ actCorpus <- tm_map(actCorpus, PlainTextDocument)
 
 ## this removes punctuation and common words like "the", "it", etc. (I believe)
 actCorpus <- tm_map(actCorpus, removePunctuation)
-actCorpus <- tm_map(actCorpus, removeWords, stopwords('english'))
+actCorpus <- tm_map(actCorpus, stripWhitespace)
+actCorpus <- tm_map(actCorpus, tolower)
+actCorpus <- tm_map(actCorpus, removeNumbers)
+actCorpus <- tm_map(actCorpus, removeWords, stopwords())
+actCorpus <- tm_map(actCorpus, removeWords, "josh")
+actCorpus <- tm_map(actCorpus, removeWords, "kathryn")
 
 ## this will look to find root words and match them i.e.: go, goes, going will all get grouped as one word element
 actCorpus <- tm_map(actCorpus, stemDocument)
@@ -202,6 +207,31 @@ wordcloud(actCorpus,
           random.order = FALSE,
           colors = brewer.pal(9, 'Blues')[4:9]
           )
+
+
+#### a different method
+
+#In tm package, the documents are managed by a structure called Corpus
+myCorpus = Corpus(VectorSource(actCorpus))
+
+#Create a term-document matrix from a corpus
+tdm = TermDocumentMatrix(myCorpus,control = list(removePunctuation = TRUE,stopwords = c("josh", "kathryn", "jim", "steven", "jon", "mike", "jen", "greg", "bennie", "tom", "health", "north", "gvsu", "grand", "summer", "lot", "valley", "daughter", "traverse", stopwords("english")), removeNumbers = TRUE, tolower = TRUE))
+
+#Convert as matrix
+m = as.matrix(tdm)
+
+#Get word counts in decreasing order
+word_freqs = sort(rowSums(m), decreasing=TRUE) 
+
+#Create data frame with words and their frequencies
+dm = data.frame(word=names(word_freqs), freq=word_freqs)
+
+#Plot wordcloud
+jpeg("example_word_cloud.jpeg", width = 10.5, height = 8, units = 'in', res = 300)
+
+wordcloud(dm$word, dm$freq, random.order=FALSE, min.freq = 7, colors=brewer.pal(8, "Dark2"))
+
+dev.off()
 
 
 #### individual word cloud  (for all gift officers seperately)

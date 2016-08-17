@@ -1,5 +1,6 @@
 ## load library(ies)
 library(stringr)
+library(readr)
 library(RCurl)  ## this is only needed if pulling in the sample data via URL
 
 ## set directory
@@ -8,6 +9,8 @@ setwd("C:/Users/pawlusm/Desktop")
 #  ## read file  (if you are using your own data -- just change the file name)
 #  ## if you want to use this script with no edits then give your free text header the column name: fs_comm
 #  gfs <- read.csv("2015 December GradFest.csv", stringsAsFactors = FALSE)
+gfs <- read_csv("2016_April_GradFest.csv")
+names(gfs) <- c("id","fs_comm")
 
 ## read in the sample data
 x <- getURL("https://raw.githubusercontent.com/michaelpawlus/fundraising_analytics/master/name_extraction_from_free_text/sample_survey.csv")
@@ -39,4 +42,4 @@ top.profs <- two.tbl[which(two.tbl$Freq>3),]
 top.profs <- top.profs[order(-top.profs$Freq),] 
 
 ## write file to a csv
-write.csv(top.profs, "top_profs.csv")
+write_csv(top.profs, "top_profs.csv")
